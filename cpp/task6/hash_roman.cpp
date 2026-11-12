@@ -2,7 +2,8 @@
 
 #include <iostream>
 #include <string>
-
+#include <chrono>
+#include <iomanip>
 
 const std::string EMPTY = "0";
 const std::string OCCUPIED = "1";
@@ -259,7 +260,94 @@ void printHashAnalysis() {
               << " строковых ключах с одинаковым исходным хеш-индексом.\n";
     showMetrics("Линейное пробирование", linearStats, keyCount);
     showMetrics("Двойное хеширование", doubleStats, keyCount);
+    constexpr int repetitions = 10000;
 
+    using Clock = std::chrono::steady_clock;
+
+    auto linearInsertStart = Clock::now();
+
+    for (int r = 0; r < repetitions; ++r) {
+        HashTable table{};
+        initHashTable(table);
+
+        for (const std::string& key : keys) {
+            insertLinear(table, key, key);
+        }
+
+        destroyHashTable(table);
+    }
+
+    auto linearInsertEnd = Clock::now();
+
+    auto doubleInsertStart = Clock::now();
+
+    for (int r = 0; r < repetitions; ++r) {
+        HashTable table{};
+        initHashTable(table);
+
+        for (const std::string& key : keys) {
+            insertDouble(table, key, key);
+        }
+
+        destroyHashTable(table);
+    }
+
+    auto doubleInsertEnd = Clock::now();
+    std::size_t linearChecksum = 0;
+    std::size_t doubleChecksum = 0;
+
+    auto linearSearchStart = Clock::now();
+
+    for (int r = 0; r < repetitions * 10; ++r) {
+        for (const std::string& key : keys) {
+            auto result = findLinear(linearTable, key);
+            if (result.has_value()) {
+                linearChecksum += result->size();
+            }
+        }
+    }
+
+    auto linearSearchEnd = Clock::now();
+
+    auto doubleSearchStart = Clock::now();
+
+    for (int r = 0; r < repetitions * 10; ++r) {
+        for (const std::string& key : keys) {
+            auto result = findDouble(doubleTable, key);
+            if (result.has_value()) {
+                doubleChecksum += result->size();
+            }
+        }
+    }
+
+    auto doubleSearchEnd = Clock::now();
+    auto linearInsertTime =
+        std::chrono::duration<double, std::milli>(
+            linearInsertEnd - linearInsertStart).count();
+
+    auto doubleInsertTime =
+        std::chrono::duration<double, std::milli>(
+            doubleInsertEnd - doubleInsertStart).count();
+
+    auto linearSearchTime =
+        std::chrono::duration<double, std::milli>(
+            linearSearchEnd - linearSearchStart).count();
+
+    auto doubleSearchTime =
+        std::chrono::duration<double, std::milli>(
+            doubleSearchEnd - doubleSearchStart).count();
+
+    std::cout << std::fixed << std::setprecision(3);
+
+    std::cout << "\nВремя выполнения:\n";
+
+    std::cout << "Линейное пробирование:\n";
+    std::cout << "  Вставка: " << linearInsertTime << " мс\n";
+    std::cout << "  Поиск: " << linearSearchTime << " мс\n";
+
+    std::cout << "Двойное хеширование:\n";
+    std::cout << "  Вставка: " << doubleInsertTime << " мс\n";
+    std::cout << "  Поиск: " << doubleSearchTime << " мс\n";
     destroyHashTable(linearTable);
     destroyHashTable(doubleTable);
 }

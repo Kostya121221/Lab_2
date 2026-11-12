@@ -19,7 +19,7 @@ int main() {
         }
         setAdd(&a, value);
     }
-
+    std::cout << "^ первое множество ^" << std::endl;
     int countB;
     if (!(std::cin >> countB) || countB < 0) {
         setDestroy(&a);
@@ -44,10 +44,15 @@ int main() {
 
     setUnionOperation(a, b, united);
     setIntersectionOperation(a, b, intersected);
+
     setDifferenceOperation(a, b, difference);
+    std::cout << "^ второе множество ^" << std::endl;
     printSet(united);
+    std::cout << "^ Объединение ^" << std::endl;
     printSet(intersected);
+    std::cout << "^ Пересечение ^" << std::endl;
     printSet(difference);
+    std::cout << "^ Разность ^" << std::endl;
 
     setDestroy(&a);
     setDestroy(&b);
